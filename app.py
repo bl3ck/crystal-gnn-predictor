@@ -453,6 +453,9 @@ def demo_page():
             # --- XAI Explanation ---
             if st.session_state.explanation:
                 st.header("Prediction Explanation (XAI)")
+                st.markdown("""
+                **Disclaimer:** The explanation below is for demonstration purposes only. It is not scientifically valid unless a real, trained model is used. The current model is untrained and does not reflect true structure-property relationships.
+                """)
                 st.markdown("This visualization highlights the atoms and bonds that were most influential in predicting the band gap. Red atoms and thicker bonds have higher importance.")
                 explanation = st.session_state.explanation
                 fig_exp = plot_explanation_3d(
