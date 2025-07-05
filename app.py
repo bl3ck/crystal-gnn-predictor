@@ -252,95 +252,28 @@ def demo_page():
     else:
         st.warning("⚠️ No Materials Project API key found - Using sample data only")
     
-    with st.expander("Find by Materials Project ID", expanded=True):
-        st.markdown("**Search the Materials Project database** for any crystal structure using its unique identifier.")
-        
-        if not Config.MP_API_KEY:
-            st.info("💡 To use real Materials Project data, you need to set up an API key. See the About page for instructions.")
-            with st.expander("Available Sample Materials (Offline Mode)", expanded=False):
-                st.markdown("""
-                **Available for search without API key:**
-                - **mp-149**: Si (Silicon) - Band gap: 1.1 eV
-                - **mp-22862**: GaN (Gallium Nitride) - Band gap: 3.4 eV  
-                - **mp-1639**: SiC (Silicon Carbide) - Band gap: 2.4 eV
-                - **mp-66**: NaCl (Sodium Chloride) - Band gap: 6.8 eV
-                - **mp-2**: LiF (Lithium Fluoride) - Band gap: 12.7 eV
-                """)
-        else:
-            st.success("✅ Full Materials Project database access available")
-        
-        # Initialize session state and fetch default material on first load
-        if 'selected_material' not in st.session_state:
-            # If API key is available, try to fetch a default material
-            if Config.MP_API_KEY:
-                fetched_material = fetch_material_data("mp-149")
-                if fetched_material is not None:
-                    st.session_state.selected_material = fetched_material
-                else:
-                    # API key available but fetch failed, use sample data
-                    data_loader = MaterialsDataLoader("demo_key")
-                    sample_materials = data_loader.get_sample_materials()
-                    st.session_state.selected_material = sample_materials[0]
-                    st.info("Using sample data since the default material could not be fetched.")
-            else:
-                # No API key, use sample data directly
-                data_loader = MaterialsDataLoader("demo_key")
-                sample_materials = data_loader.get_sample_materials()
-                st.session_state.selected_material = sample_materials[0]  # Use first sample
-                st.info("Using sample data since Materials Project API key is not available.")
-            
-            st.session_state.predictions = None
-            st.session_state.explanation = None # Initialize explanation state
+    # --- Searchbar temporarily hidden. Only use the curated examples below. --- 
+    # If you want to re-enable the searchbar, restore the code in this section.
+    # The rest of the demo page remains unchanged.
 
-        mp_id_input = st.text_input(
-            "Enter a Material ID:", 
-            key="mp_id_input",
-            help="With API key: Try any Materials Project ID (e.g., mp-149, mp-22862, mp-66). Without API key: Available samples are mp-149 (Si), mp-22862 (GaN), mp-1639 (SiC), mp-66 (NaCl), mp-2 (LiF)"
-        )
-
-        if st.button("Fetch Material Data", key="fetch_mp_id"):
-            if mp_id_input.strip():  # Only fetch if input is not empty
-                # Show what we're searching for
-                st.info(f"Searching for material: {mp_id_input.strip()}")
-                
-                fetched_material = fetch_material_data(mp_id_input.strip())
-                # Fallback to sample if API is not available
-                if fetched_material is None and not Config.MP_API_KEY:
-                    fetched_material = get_sample_by_id(mp_id_input.strip())
-                    if fetched_material is not None:
-                        st.info(f"Loaded sample data for {fetched_material['formula']} ({fetched_material['material_id']})")
-                # Clear all session state related to any previous material
-                st.session_state.predictions = None
-                st.session_state.explanation = None
-                st.session_state.graph_data = None
-                if fetched_material is not None:
-                    st.session_state.selected_material = fetched_material
-                    st.success(f"Successfully loaded {fetched_material['formula']} ({fetched_material['material_id']})!")
-                    st.rerun()  # Rerun to update the UI with new material
-                else:
-                    # If fetch failed, show error but keep current material loaded
-                    if Config.MP_API_KEY:
-                        st.error(f"Material {mp_id_input.strip()} not found in the Materials Project database. Please check the ID.")
-                    else:
-                        st.error(f"Material {mp_id_input.strip()} not found in sample data. Available sample IDs: mp-149 (Si), mp-22862 (GaN), mp-1639 (SiC), mp-66 (NaCl), mp-2 (LiF)")
-                    # Don't clear the current material or rerun - just show the error
-            else:
-                st.warning("Please enter a Material ID before clicking Fetch.")
+    # --- Ensure session state is initialized ---
+    data_loader = MaterialsDataLoader("demo_key")
+    sample_materials = data_loader.get_sample_materials()
+    if 'selected_material' not in st.session_state:
+        st.session_state.selected_material = sample_materials[0]
+        st.session_state.predictions = None
+        st.session_state.explanation = None
+        st.session_state.graph_data = None
 
     with st.expander("Choose a Pre-loaded Sample"):
         st.markdown("**Quick start** with curated examples covering different material types and crystal systems.")
-        # Corresponds to "Choose a Pre-loaded Sample"
-        data_loader = MaterialsDataLoader("demo_key")
-        sample_materials = data_loader.get_sample_materials()
         material_options = [f"{mat['formula']} ({mat['material_id']})" for mat in sample_materials]
-        
         selected_idx = st.selectbox(
             "Select a sample:", 
             range(len(material_options)), 
             format_func=lambda x: material_options[x], 
             key="sample_select"
         )
-        
         # Update state only if the selection has changed to prevent unnecessary reruns
         if st.session_state.selected_material.get('material_id') != sample_materials[selected_idx]['material_id']:
             st.session_state.selected_material = sample_materials[selected_idx]
