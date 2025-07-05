@@ -99,6 +99,22 @@ class MaterialsDataLoader:
                 'structure': self._get_silicon_structure()
             },
             {
+                'material_id': 'mp-22862',
+                'formula': 'GaN',
+                'band_gap': 3.4,
+                'formation_energy_per_atom': -1.2,
+                'density': 6.15,
+                'structure': self._get_gan_structure()
+            },
+            {
+                'material_id': 'mp-1639',
+                'formula': 'SiC',
+                'band_gap': 2.4,
+                'formation_energy_per_atom': -0.7,
+                'density': 3.21,
+                'structure': self._get_sic_structure()
+            },
+            {
                 'material_id': 'mp-66',
                 'formula': 'NaCl',
                 'band_gap': 6.8,
@@ -135,6 +151,36 @@ class MaterialsDataLoader:
             [0.25, 0.75, 0.75]
         ]
         
+        return Structure(lattice, species, coords)
+    
+    def _get_gan_structure(self) -> Structure:
+        """Create wurtzite GaN structure (hexagonal)"""
+        from pymatgen.core import Lattice, Structure
+        a = 3.189
+        c = 5.185
+        lattice = Lattice.hexagonal(a, c)
+        species = ["Ga", "Ga", "N", "N"]
+        coords = [
+            [1/3, 2/3, 0.0],
+            [2/3, 1/3, 0.5],
+            [1/3, 2/3, 0.375],
+            [2/3, 1/3, 0.875]
+        ]
+        return Structure(lattice, species, coords)
+
+    def _get_sic_structure(self) -> Structure:
+        """Create 2H-SiC wurtzite structure (hexagonal)"""
+        from pymatgen.core import Lattice, Structure
+        a = 3.08
+        c = 5.05
+        lattice = Lattice.hexagonal(a, c)
+        species = ["Si", "Si", "C", "C"]
+        coords = [
+            [1/3, 2/3, 0.0],
+            [2/3, 1/3, 0.5],
+            [1/3, 2/3, 0.375],
+            [2/3, 1/3, 0.875]
+        ]
         return Structure(lattice, species, coords)
     
     def _get_nacl_structure(self) -> Structure:
