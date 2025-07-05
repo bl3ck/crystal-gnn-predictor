@@ -2,7 +2,7 @@ import streamlit as st
 import torch
 
 class Config:
-    MP_API_KEY = st.secrets.get("MP_API_KEY", "MACqP7aSfKafCcwSNzbGncZixvqlfKPl")
+    MP_API_KEY = st.secrets.get("MP_API_KEY")
     MODEL_PATH = "crystal_gnn_model.pkl"
     DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     

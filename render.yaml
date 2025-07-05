@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: crystalytics
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: streamlit run app.py --server.port=$PORT --server.address=0.0.0.0
+    healthCheckPath: /_stcore/health
+    envVars:
+      - key: MP_API_KEY
+        sync: false

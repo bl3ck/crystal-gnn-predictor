@@ -1,4 +1,6 @@
 import plotly.graph_objects as go
+import torch
+import numpy as np
 from pymatgen.core import Structure
 from typing import Dict
 
@@ -72,6 +74,69 @@ def plot_crystal_structure_3d(structure: Structure, title: str = "Crystal Struct
         margin=dict(l=0, r=0, t=50, b=0)
     )
     
+    return fig
+
+def plot_explanation_3d(structure: Structure, graph_data, node_feat_mask: torch.Tensor, edge_mask: torch.Tensor, title: str = "GNN Prediction Explanation"):
+    """Create 3D visualization of GNN explanation with atom and bond importance."""
+    
+    positions = structure.cart_coords
+    species = [str(site.specie) for site in structure]
+    
+    # Normalize node feature mask to get per-atom importance (0 to 1)
+    # We sum the importance across all features for each atom
+    node_importance = node_feat_mask.sum(dim=1).detach().numpy()
+    node_colors = (node_importance - node_importance.min()) / (node_importance.max() - node_importance.min() + 1e-6)
+
+    # Create 3D scatter plot for atoms, colored by importance
+    fig = go.Figure(data=go.Scatter3d(
+        x=positions[:, 0],
+        y=positions[:, 1],
+        z=positions[:, 2],
+        mode='markers',
+        marker=dict(
+            size=15,
+            color=node_colors,
+            colorscale='Reds',
+            colorbar=dict(title='Atom Importance'),
+            opacity=0.8
+        ),
+        text=species,
+        hovertemplate='<b>%{text}</b><br>Importance: %{marker.color:.3f}<extra></extra>'
+    ))
+
+    # Add bonds (edges) colored by importance
+    edge_index = graph_data.edge_index.cpu().numpy()
+    edge_importance = edge_mask.cpu().detach().numpy()
+
+    # Normalize edge importance for line width
+    edge_widths = 2 + edge_importance * 8  # Scale width from 2 to 10
+
+    for i in range(edge_index.shape[1]):
+        start_idx, end_idx = edge_index[:, i]
+        start_pos, end_pos = positions[start_idx], positions[end_idx]
+        
+        fig.add_trace(go.Scatter3d(
+            x=[start_pos[0], end_pos[0]],
+            y=[start_pos[1], end_pos[1]],
+            z=[start_pos[2], end_pos[2]],
+            mode='lines',
+            line=dict(color='gray', width=edge_widths[i]),
+            hoverinfo='none',
+            showlegend=False
+        ))
+
+    fig.update_layout(
+        title=title,
+        scene=dict(
+            xaxis_title='X (Å)',
+            yaxis_title='Y (Å)',
+            zaxis_title='Z (Å)',
+            aspectmode='cube'
+        ),
+        height=500,
+        margin=dict(l=0, r=0, t=50, b=0)
+    )
+
     return fig
 
 def plot_property_predictions(predictions: Dict, actuals: Dict = None):

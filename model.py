@@ -26,17 +26,15 @@ class CrystalGNN(nn.Module):
         self.convs.append(GCNConv(hidden_dim, hidden_dim))
         self.batch_norms.append(nn.BatchNorm1d(hidden_dim))
         
-        # Final prediction layer
+        # Final prediction layer for multiple properties
         self.predictor = nn.Sequential(
             nn.Linear(hidden_dim * 2, hidden_dim),  # *2 for mean + max pooling
             nn.ReLU(),
             nn.Dropout(0.1),
-            nn.Linear(hidden_dim, output_dim)
+            nn.Linear(hidden_dim, 3) # Predict 3 properties: band_gap, formation_energy, density
         )
     
-    def forward(self, data):
-        x, edge_index, batch = data.x, data.edge_index, data.batch
-        
+    def forward(self, x, edge_index, batch):
         # Graph convolutions
         for i in range(self.num_layers):
             x = self.convs[i](x, edge_index)
